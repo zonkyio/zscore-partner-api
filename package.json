@@ -1,0 +1,30 @@
+{
+  "name": "zscore-api",
+  "version": "1.0.0",
+  "description": "Zonky Score API",
+  "scripts": {
+    "build": "aglio --theme-full-width -i apiary.apib -o output.html",
+    "dev": "aglio --theme-full-width -i apiary.apib -s"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zonkyio/zscore-api.git"
+  },
+  "keywords": [
+    "zonky",
+    "score",
+    "api"
+  ],
+  "author": "Zonky s.r.o.",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zonkyio/zscore-api/issues"
+  },
+  "homepage": "https://zscore.docs.apiary.io",
+  "engines": {
+    "node": ">=6.9.1"
+  },
+  "devDependencies": {
+    "aglio": "^2.3.0"
+  }
+}

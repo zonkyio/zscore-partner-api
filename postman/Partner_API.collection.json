@@ -1,0 +1,596 @@
+{
+	"info": {
+		"_postman_id": "ddb0c6fe-e21b-40bd-b2ff-a4d6cac486ea",
+		"name": "ZS PARTNER API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01 - AccessToken",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"const jsonData = pm.response.json();",
+							"",
+							"pm.test(\"Scope is correct\", function () {",
+							"    pm.expect(jsonData.scope).to.contain(\"SCOPE_PARTNER_API\");",
+							"});",
+							"",
+							"pm.test(\"Access Token returned\", function () {",
+							"    pm.expect(jsonData).to.have.property('access_token');",
+							"    pm.environment.set(\"oauthAccessToken\", jsonData.access_token);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Zebra2014",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "partner-test",
+							"type": "string"
+						},
+						{
+							"key": "saveHelperData",
+							"type": "any"
+						},
+						{
+							"key": "showPassword",
+							"value": false,
+							"type": "boolean"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "text"
+						},
+						{
+							"key": "scope",
+							"value": "SCOPE_PARTNER_API",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "web-partner",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "client_secret",
+							"value": "web",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:9092/oauth/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9092",
+					"path": [
+						"oauth",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "02 - Subscription Plan",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"const jsonData = pm.response.json();",
+							"",
+							"pm.test(\"Subscription plan is correct\", function () {",
+							"    pm.expect(jsonData).to.have.property('weekLimit');",
+							"    pm.expect(jsonData).to.have.property('weekLimitRemaining');",
+							"    pm.expect(jsonData).to.have.property('monthLimit');",
+							"    pm.expect(jsonData).to.have.property('monthLimitRemaining');",
+							"    pm.expect(jsonData.weekLimit).to.equals(1000);",
+							"    pm.expect(jsonData.monthLimit).to.equals(4000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{oauthAccessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9092/partners/me/subscription",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9092",
+					"path": [
+						"partners",
+						"me",
+						"subscription"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "10 - Create Application",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Location contains application_uuid\", function () {",
+							"    pm.response.to.have.header(\"Location\");",
+							"    pm.environment.set(\"application_uuid\", pm.response.headers.get(\"Location\").split(\"/\")[6]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{oauthAccessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"birthYear\": 1989,\n    \"education\": \"PRIMARY\",\n    \"gender\": \"MALE\",\n    \"email\": \"tester@zonky.cz\",\n    \"phone\": \"+420777888999\",\n    \"housingType\": \"RENT\",\n    \"maritalStatus\": \"SINGLE\",\n    \"primaryIncome\": 15000.00,\n    \"zipCode\": \"18600\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9092/partners/me/applications",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9092",
+					"path": [
+						"partners",
+						"me",
+						"applications"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "11 - Get Application details",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"const jsonData = pm.response.json();",
+							"",
+							"pm.test(\"Response JSON contains all data\", function () {",
+							"    pm.expect(jsonData).to.have.property('uuid');",
+							"    pm.expect(jsonData.uuid).to.equals(pm.environment.get(\"application_uuid\"));",
+							"    pm.expect(jsonData).to.have.property('createdAt');",
+							"    pm.expect(jsonData).to.have.property('scoringFinishedAt');",
+							"    pm.expect(jsonData).to.have.property('email');",
+							"    pm.expect(jsonData).to.have.property('phone');",
+							"    pm.expect(jsonData).to.have.property('birthYear');",
+							"    pm.expect(jsonData).to.have.property('education');",
+							"    pm.expect(jsonData).to.have.property('housingType');",
+							"    pm.expect(jsonData).to.have.property('gender');",
+							"    pm.expect(jsonData).to.have.property('maritalStatus');",
+							"    pm.expect(jsonData).to.have.property('zipCode');",
+							"    pm.expect(jsonData).to.have.property('primaryIncome');",
+							"    pm.expect(jsonData).to.have.property('status');",
+							"    pm.expect(jsonData).to.have.property('score');",
+							"    pm.expect(jsonData).to.have.property('recommendations');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{oauthAccessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9092/partners/me/applications/{{application_uuid}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9092",
+					"path": [
+						"partners",
+						"me",
+						"applications",
+						"{{application_uuid}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "12 - Get Application status",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"const jsonData = pm.response.json();",
+							"",
+							"pm.test(\"Response JSON contains all data\", function () {",
+							"    pm.expect(jsonData).to.have.property('attachmentsParsingState');",
+							"    pm.expect(jsonData.uuid).to.equals(pm.environment.get(\"attachmentsParsingErrorCode\"));",
+							"    pm.expect(jsonData).to.have.property('scoringState');",
+							"    pm.expect(jsonData).to.have.property('scoringErrorCode');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{oauthAccessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9092/partners/me/applications/{{application_uuid}}/status",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9092",
+					"path": [
+						"partners",
+						"me",
+						"applications",
+						"{{application_uuid}}",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "13 - Update Application (Not ready)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"const jsonData = pm.response.json();",
+							"",
+							"pm.test(\"Response JSON is correct with new data\", function () {",
+							"    pm.expect(jsonData.weekLimit).to.equals(1000);",
+							"    pm.expect(jsonData.monthLimit).to.equals(4000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{oauthAccessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"birthYear\": 1983,\n    \"education\": \"GRADUATE\",\n    \"gender\": \"MALE\",\n    \"email\": \"tester02@zonky.cz\",\n    \"phone\": \"+420777888000\",\n    \"housingType\": \"OWN_WITH_MORTGAGE\",\n    \"maritalStatus\": \"PARTNER\",\n    \"primaryIncome\": 35000.00,\n    \"zipCode\": \"70200\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9092/partners/me/applications/{{application_uuid}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9092",
+					"path": [
+						"partners",
+						"me",
+						"applications",
+						"{{application_uuid}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "20 - Add Attachment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Location contains application_uuid\", function () {",
+							"    pm.response.to.have.header(\"Location\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{oauthAccessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/Users/libormika/Zonky/TESTING/account_statement_moneta.pdf"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:9092/partners/me/applications/{{application_uuid}}/attachments",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9092",
+					"path": [
+						"partners",
+						"me",
+						"applications",
+						"{{application_uuid}}",
+						"attachments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "21 - Delete All Attachments",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{oauthAccessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "http://localhost:9092/partners/me/applications/{{application_uuid}}/attachments",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9092",
+					"path": [
+						"partners",
+						"me",
+						"applications",
+						"{{application_uuid}}",
+						"attachments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "30 - Finish Application",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 202\", function () {",
+							"    pm.response.to.have.status(202);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{oauthAccessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9092/partners/me/applications/{{application_uuid}}/finish",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9092",
+					"path": [
+						"partners",
+						"me",
+						"applications",
+						"{{application_uuid}}",
+						"finish"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

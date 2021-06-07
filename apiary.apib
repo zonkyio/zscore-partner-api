@@ -1,0 +1,748 @@
+FORMAT: 1A6
+HOST: https://osobniskore.cz/api
+# Personal Score Partner API
+
+Personal Score is API for evaluating client credibility and recommend useful step how to improve it.
+
+# Rules of thumb
+
+## API Quota, limits, rate limiting, QoS
+And other ugly words may follow. Please take into account that even our system has limits.
+Do to this API as you would have others to do to your own API.
+Currently, there is an API Throttle functionality that forbids users to make huge amount of requests per time interval.
+The algorithm used is Leaky Bucket that refreshes three token every second with a capacity of 500 tokens.
+It means that if your robot makes three request per seconds on average, you're fine.
+You can choose whether it is making three request every second, 1500 requests every 500 seconds on something in between.
+These numbers can be changed anytime so make your client aware of the throttled HTTP response.
+In case of client hitting the limit, the API responds with HTTP status code 429 - Too Many Requests.
+If you're trying to accomplish any use case and the API Throttling functionality is preventing you from success, please contact us and we'll try to figure something out.
+
+## Secure access
+
+Use secure transport protocol (HTTPS) when accessing Partner API.
+
+## OAuth 2 authentication
+
+Zonky users are identified using [OAuth 2.0](http://oauth.net/2/) protocol. At the moment we support following OAuth 2 grant type:
+
+* Client Credentials Grant Flow where client app obtains client ID and client Secret which is later exchanged for access token.
+
+In case that you don't have valid access token you should initiate Client Credentials Grant Flow to obtain new one with limited validity.
+If valid access token still exists repeating Client Credentials Grant Flow will always return same token.
+
+# General errors
+
+### API Quota
+
+When using of API fulfil API Quota and rate limiting rule, or when week or month limit is reach for partner 
+subscription plan.
+
+Response 429 (application/json)
+```js
+{
+    "error": "TOO_MANY_REQUESTS",
+    "error_description": "limit for using Partner API reached"
+}
+```
+
+### Access token expired
+
+When validity of subscription plan for partner expires.
+
+Response 401 (application/json)
+```js
+{
+    "error": "invalid_token",
+    "error_description": "Invalid access token: 0e4c0a38-fefb-40f3-b4fb-e312f0caf501"
+}
+```
+
+### API Subscription plan expired
+
+When validity of subscription plan for partner expires.
+
+Response 403 (application/json)
+```js
+{
+    "error": "SUBSCRIPTION_PLAN_EXPIRED",
+    "error_description": "Partner subscription plan expired"
+}
+```
+
+## OAuth Authorization [/oauth]
+
+### Request Access token [POST /oauth/token]
+
+For OAuth2 authentication we provided `client_id` and `client_secret`. 
+Use both to generate username/password basic authentication header.
+Within response you will obtain `access_token` that you will use for secured comunitation with API.
+
++ Request (x-www-form-urlencoded)
+
+    + Headers
+
+            Authorization: Basic d2ViOndlYg==
+
+    + Body
+
+            grant_type: client_credentials
+
++ Response 200 (application/json)
+
+        {
+            "access_token": "f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1",
+            "token_type": "bearer",
+            "expires_in": 899,
+            "scope": "SCOPE_PARTNER_API"
+        }
+
++ Response 400 (application/json)
+
+        {
+            "error": "unauthorized",
+            "uuid": "Bad credentials"
+        }
+   
++ Response 400 (application/json)
+
+        {
+            "error": "invalid_scope",
+            "error_description": "Invalid scope: SCOPE_PARTNER_APIS",
+            "scope": "SCOPE_PARTNER_API"
+        }
+        
++ Response 400 (application/json)
+
+        {
+            "error": "invalid_client",
+            "error_description": "Bad Unauthorized grant type: password"
+        }
+        
+    
+## Applications [/partners/me/applications]
+
+### Create new Application [POST /partners/me/applications]
+
+Create new application. Use response `Location` header for following operations.
+
++ Attributes
+    - `email` (string, optional)
+    - `phone` (string, optional)
+    - `birthYear` (number, required)
+        Valid date from 1900 to 2100
+    - `education` (enum, required)
+        - `PRIMARY`
+        - `CERTIFIED`
+        - `HIGH_SCHOOL`
+        - `HIGHER`
+        - `UNDERGRADUATE`
+        - `GRADUATE`
+    - `housingType` (enum, required)
+        - `RENT`
+        - `OWN_WITH_MORTGAGE`
+        - `OWN_WITHOUT_MORTGAGE`
+        - `COOPERATIVE`
+        - `FAMILY`
+        - `PARTNER`
+        - `SHARED`
+    - `gender` (enum, required)
+        - `MALE`
+        - `FEMALE`
+    - `maritalStatus` (enum, required)
+        - `MARRIED`
+        - `SINGLE`
+        - `PARTNER`
+        - `DIVORCED`
+        - `REGISTERED_PARTNERSHIP`
+        - `WIDOWER`
+    - `zipCode` (number, required)  
+        5 digits e.g. 70200
+    - `primaryIncome` (number, required)
+        without space e.g. 10000, 505.90
+        
++ Request (application/json)
+    
+    + Headers
+
+            Authorization: Bearer f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1
+
+    + Body
+        ```js
+        {
+            "email": "test@zonky.cz",
+            "phone": "420777888999",
+            "birthYear" : 1989,
+            "education" : "HIGH_SCHOOL",
+            "housingType" : "RENT",
+            "gender" : "MALE",
+            "maritalStatus" : "MARRIED",
+            "zipCode" : 70200,
+            "primaryIncome": 10000.00
+        }
+        ```
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /partners/me/applications/f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1
+        
+    
++ Response 400 (application/json) 
+
+    ```js
+        {
+            "error": "VALIDATION_ERROR",
+            "errorDescription": "The request validation did not pass",
+            "uuid": "e16e2f3f-b19b-4da4-a860-0e955de2c950",
+            "fieldErrors": [
+                {
+                    "fieldName": "birthYear",
+                    "rejectedValue": "2210",
+                    "errorType": "Max",
+                    "message": "must be less than or equal to 2100"
+                },
+                {
+                    "fieldName": "education",
+                    "rejectedValue": "MAM ZAKLADKU",
+                    "errorType": "ValueOfEnum",
+                    "message": "Must be any of enum [PRIMARY, CERTIFIED, HIGH_SCHOOL, HIGHER, UNDERGRADUATE, GRADUATE]"
+                }
+            ]
+        }
+    ```
+
+### Get All Applications [GET /partners/me/applications{?page,size,createdFrom,createdTo,status}]
+
+(NOT READY YET)
+Gets all partners created applications data. Its possible to perform pagination and filtering.
+
++ Parameters
+
+    - page (number, optional) - Default is 1
+    - size (number, optional) - Default is 10
+    - createdFrom (string, `2021-03-14`, optional)
+    - createdTo (string, `2021-04-14`, optional)
+    - status (enum, optional) 
+        - `OPEN`
+        - `FAILED`
+        - `FINISHED`
+        - `EXPIRED`
+      
++ Request
+
+    + Headers
+
+            Authorization: Bearer f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1
+
++ Response 200 (application/json)  
+
+        ```js
+            {
+                "uuid" : "6fdd5451-4476-4d11-8c17-407a13b8898d",
+                "createdAt": "2021-03-14T12:35:00",
+                "scoringFinishedAt": null
+                "email": null,
+                "phone": null,
+                "status": "OPEN"
+            }
+        ```
+     
+
+### Get Application [GET /partners/me/applications/{application_uuid}]
+
+Gets the applications data. If scoring is successfully completed we also provide scoring data result.
+
++ Parameters
+
+    + application_uuid (string, `6fdd5451-4476-4d11-8c17-407a13b8898d`, required)
+      
++ Request
+
+    + Headers
+
+            Authorization: Bearer f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1 
+        
++ Response 200 (application/json)
+
+    + Attributes
+    
+        - status (enum) 
+            - `OPEN`
+            - `FAILED`
+            - `FINISHED`
+            - `EXPIRED`
+        - `education` (enum)
+            - `PRIMARY`
+            - `CERTIFIED`
+            - `HIGH_SCHOOL`
+            - `HIGHER`
+            - `UNDERGRADUATE`
+            - `GRADUATE`
+        - `housingType` (enum)
+            - `RENT`
+            - `OWN_WITH_MORTGAGE`
+            - `OWN_WITHOUT_MORTGAGE`
+            - `COOPERATIVE`
+            - `FAMILY`
+            - `PARTNER`
+            - `SHARED`
+        - `gender` (enum)
+            - `MALE`
+            - `FEMALE`
+        - `maritalStatus` (enum)
+            - `MARRIED`
+            - `SINGLE`
+            - `PARTNER`
+            - `DIVORCED`
+            - `REGISTERED_PARTNERSHIP`
+            - `WIDOWER`
+        
+    + Body
+
+        ```js
+            {
+                "uuid" : "6fdd5451-4476-4d11-8c17-407a13b8898d",
+                "createdAt": "2021-03-14T12:35:00",
+                "scoringFinishedAt": null
+                "email": null,
+                "phone": null,
+                "birthYear" : 1989,
+                "education" : "HIGH_SCHOOL",
+                "housingType" : "RENT",
+                "gender" : "MALE",
+                "maritalStatus" : "SINGLE",
+                "zipCode" : 70200,
+                "primaryIncome": 10000
+                "status": "OPEN",
+                "score": null
+                "recommendations": null,
+                "warnings": null
+            }
+        ```
+        
+
++ Response 200 (application/json) 
+    
+        ```js
+            {
+                "uuid": "f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1",
+                "createdAt": "2021-03-14T12:35:00",
+                "scoringFinishedAt": "2021-03-14T12:48:00",
+                "email": "test@zonky.cz",
+                "phone": "420777888999",
+                "birthYear" : 1989,
+                "education" : "HIGH_SCHOOL",
+                "housingType" : "RENT",
+                "gender" : "MALE",
+                "maritalStatus" : "SINGLE",
+                "zipCode" : 70200,
+                "primaryIncome": 10000,
+                "status": "FINISHED",
+                "score": {
+                    "finalScore": 525,
+                    "estimatedInterestRate": 5.99
+                },
+                "recommendations": [
+                    {
+                        "title": "Plaťte včas",
+                        "message": "Splátky půjček a faktury za služby plaťte vždy včas. Nastavte si trvalý příkaz nebo inkaso.",
+                        "priority": 1
+                    },
+                    {
+                        "title": "Mějte kontrolu nad svými výdaji",
+                        "message": "Neutrácejte víc, než si můžete dovolit. Neřešte období před výplatou mikropůjčkami.",
+                        "priority": 2
+                    },
+                    {
+                        "title": "Budujte si úvěrovou historii",
+                        "message": "Lepší než nemít žádnou půjčku je mít rozumnou půjčku a řádně ji splácet. Prokážete se jako důvěryhodný a spolehlivý člověk.",
+                        "priority": 3
+                    }
+                ],
+                "warnings": [
+                    "OLD_STATEMENTS"
+                ]
+            }
+        ```
+    
++ Response 404 (application/json)
+
+        {
+            "error": "NOT_FOUND",
+            "error_description":"Resource was not found",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+    
+### Update Application [PUT /partners/me/applications/{application_uuid}]
+
+(NOT READY YET)
+Update existing application data.
+
++ Parameters
+
+    + application_uuid (string, `6fdd5451-4476-4d11-8c17-407a13b8898d`, required)
+      
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1 
+            
+    + Attributes
+        - `email` (string, optional)
+        - `phone` (string, optional)
+        - `birthYear` (number, required)
+            Valid date from 1900 to 2100
+        - `education` (enum, required)
+            - `PRIMARY`
+            - `CERTIFIED`
+            - `HIGH_SCHOOL`
+            - `HIGHER`
+            - `UNDERGRADUATE`
+            - `GRADUATE`
+        - `housingType` (enum, required)
+            - `RENT`
+            - `OWN_WITH_MORTGAGE`
+            - `OWN_WITHOUT_MORTGAGE`
+            - `COOPERATIVE`
+            - `FAMILY`
+            - `PARTNER`
+            - `SHARED`
+        - `gender` (enum, required)
+            - `MALE`
+            - `FEMALE`
+        - `maritalStatus` (enum, required)
+            - `MARRIED`
+            - `SINGLE`
+            - `PARTNER`
+            - `DIVORCED`
+            - `REGISTERED_PARTNERSHIP`
+            - `WIDOWER`
+        - `zipCode` (number, required)  
+            e.g. 70200
+        - `primaryIncome` (number, required)
+            not space or decimal points e.g. 10000
+
+    + Body
+        ```js
+        {
+            "email": "test@zonky.cz",
+            "phone": "420777888999",
+            "birthYear" : 1989,
+            "education" : "HIGH_SCHOOL",
+            "housingType" : "RENT",
+            "gender" : "MALE",
+            "maritalStatus" : "MARRIED",
+            "zipCode" : 70200,
+            "primaryIncome": 10000
+        }
+        ```
+        
++ Response 200 (application/json)
+
+    + Attributes
+    
+        - status (enum) 
+            - `OPEN`
+            - `FAILED`
+            - `FINISHED`
+            - `EXPIRED`
+        - `education` (enum)
+            - `PRIMARY`
+            - `CERTIFIED`
+            - `HIGH_SCHOOL`
+            - `HIGHER`
+            - `UNDERGRADUATE`
+            - `GRADUATE`
+        - `housingType` (enum)
+            - `RENT`
+            - `OWN_WITH_MORTGAGE`
+            - `OWN_WITHOUT_MORTGAGE`
+            - `COOPERATIVE`
+            - `FAMILY`
+            - `PARTNER`
+            - `SHARED`
+        - `gender` (enum)
+            - `MALE`
+            - `FEMALE`
+        - `maritalStatus` (enum)
+            - `MARRIED`
+            - `SINGLE`
+            - `PARTNER`
+            - `DIVORCED`
+            - `REGISTERED_PARTNERSHIP`
+            - `WIDOWER`
+        
+    + Body
+
+        ```js
+            {
+                "uuid" : "6fdd5451-4476-4d11-8c17-407a13b8898d",
+                "createdAt": "2021-03-14T12:35:00",
+                "scoringFinishedAt": null,
+                "email": null,
+                "phone": null,
+                "birthYear" : 1989,
+                "education" : "HIGH_SCHOOL",
+                "housingType" : "RENT",
+                "gender" : "MALE",
+                "maritalStatus" : "SINGLE",
+                "zipCode" : 70200,
+                "primaryIncome": 10000
+                "status": "OPEN",
+                "score": null,
+                "recommendations": null,
+                "warnings": null
+            }
+        ```
+        
++ Response 400 (application/json)
+
+        {
+            "error": "APPLICATION_STATUS_ERROR",
+            "error_description": "Application has invalid status for update",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+        
++ Response 400 (application/json) 
+
+    ```js
+        {
+            "error": "VALIDATION_ERROR",
+            "errorDescription": "The request validation did not pass",
+            "uuid": "e16e2f3f-b19b-4da4-a860-0e955de2c950",
+            "fieldErrors": [
+                {
+                    "fieldName": "birthYear",
+                    "rejectedValue": "2210",
+                    "errorType": "Max",
+                    "message": "must be less than or equal to 2100"
+                }
+            ]
+        }
+    ```
+    
++ Response 404 (application/json)
+
+        {
+            "error": "NOT_FOUND",
+            "error_description":"Resource was not found",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+    
+### Finish application [PUT /partners/me/applications/{application_uuid}/finish]
+
+Finish populating data for application and execute scoring algorithm. State of parsing attachments and scoring could be 
+pool on `GET /partners/me/applications/{application_uuid}/status`. Final score and recomendations will be available 
+on `GET /partners/me/applications/{application_uuid}` and state of parsing and scoring is marked as `COMPLETED`.
+
++ Parameters
+
+    + application_uuid (string, `6fdd5451-4476-4d11-8c17-407a13b8898d`, required)
+      
++ Request
+
+    + Headers
+
+            Authorization: Bearer f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1 
+
++ Response 202
+
++ Response 400
+
+        {
+            "error": "APPLICATION_STATUS_ERROR",
+            "errorDescription": "Application has invalid status for finish",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+        
++ Response 400
+
+        {
+            "error": "MISSING_ATTACHMENT",
+            "errorDescription": "No attachments found for application, at least one is required",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+        
++ Response 404 (application/json)
+
+        {
+            "error": "NOT_FOUND",
+            "error_description":"Resource was not found",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+       
+### Get Application processing status [GET /partners/me/applications/{application_uuid}/status]
+
+Gets state of processing for specific application.
+
++ Parameters
+
+    + application_uuid (string, `6fdd5451-4476-4d11-8c17-407a13b8898d`, required)
+      
++ Request
+
+    + Headers
+
+            Authorization: Bearer f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1 
+    
++ Response 200 (application/json)  
+
+    + Attributes
+        - attachmentsParsingState(enum)
+            - `PENDING`
+            - `COMPLETED`
+            - `FAILED`
+        - scoringState(enum)
+            - `PENDING`
+            - `COMPLETED`
+            - `FAILED`
+        - attachmentsParsingErrorCode (enum)
+            - `UNSUPPORTED_MEDIA_TYPE`
+                Uploaded Attachment file is not PDF with bank statement
+            - `UNPROCESSABLE_ENTITY`
+                PDF file contans data that we are not able to process or bank is not supported
+            - `PARSER_ERROR`
+                Parsing of bank statements failed with unexpected error
+        - scoringErrorCode (enum)
+            - `TRANSACTION_QUERY_ERROR`
+                Preparing transaction data from bank statements failed
+            - `BRIEF_HISTORY_OF_STATEMENTS`
+                Transaction history is too short, required 3 months in row 
+            - `LOW_NUMBER_OF_TRANSACTIONS`
+                Bank statements data contains low number of transactions for calculating score
+                Only CZK transactions will be processed
+            - `MISSING_STATEMENT_IN_ROW`
+                Required 3 months in row of bank statements in attachment
+            - `SCORING_FAILED`
+                Calculating of score failed with unexpected error
+        
++ Response 200 (application/json)  
+
+    ```js
+        {
+            "attachmentsParsingState" : "PENDING",
+            "attachmentsParsingErrorCode" : null,
+            "scoringState" : "PENDING",
+            "scoringErrorCode" : null
+        }
+    ```
+        
++ Response 200 (application/json)  
+
+    ```js
+        {
+            "attachmentsParsingState" : "COMPLETED",
+            "attachmentsParsingErrorCode" : null,
+            "scoringState" : "COMPLETED",
+            "scoringErrorCode" : null
+        }
+    ```
+    
++ Response 200 (application/json)  
+
+     ```js
+        {
+            "attachmentsParsingState" : "FAILED",
+            "attachmentsParsingErrorCode" : "UNPROCESSABLE_ENTITY",
+            "scoringState" : "FAILED",
+            "scoringErrorCode" : "LOW_NUMBER_OF_TRANSACTIONS"
+        }
+    ```
+
++ Response 404 (application/json)
+
+        {
+            "error": "NOT_FOUND",
+            "error_description":"Resource was not found",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+    
+## Application Attachments [/partners/me/applications/{application_uuid}/attachments]
+
+### Upload attachment to application [POST /partners/me/applications/{application_uuid}/attachments]
+
+Upload bank account statement in PDF format. Could be called multiple times, each statement will be parsed and include 
+into calculation of final score.
+      
++ Request (multipart/form-data)
+
+    + Parameters
+    
+        + application_uuid (string, `6fdd5451-4476-4d11-8c17-407a13b8898d`, required)
+        
+    + Headers
+
+            Authorization: Bearer f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1
+
+    + Body
+    
+            file: [file content]
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /partners/me/applications/6fdd5451-4476-4d11-8c17-407a13b8898d/attachments/4f6e5019-3c21-4dc5-ab1c-e5df414b1176
+
++ Response 400 (application/json)
+
+        {
+            "error": "APPLICATION_STATUS_ERROR",
+            "error_description": "Application has invalid status for update",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+
+
++ Response 400 (application/json)
+
+        {
+            "error": "UNSUPPORTED_MEDIA_TYPE",
+            "error_description": "Unsupported attachment media type 'image/svg+xml'",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+        
+
++ Response 404 (application/json)
+
+        {
+            "error": "NOT_FOUND",
+            "error_description":"Resource was not found",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+
+### Delete attachments for application [DELETE /partners/me/applications/{application_uuid}/attachments]
+
+Delete all uploaded attachments for specific application. Use it to start over with sending application attachments
+if there is some problem with previously uploaded files.
+      
++ Request (application/json)
+
+    + Parameters
+    
+        + application_uuid (string, `6fdd5451-4476-4d11-8c17-407a13b8898d`, required)
+        
+    + Headers
+
+            Authorization: Bearer f6cb1d8c-f7a9-4e3f-a035-67ec5ad32ad1
+
++ Response 204 (application/json)
+
++ Response 400 (application/json)
+
+        {
+            "error": "APPLICATION_STATUS_ERROR",
+            "error_description": "Application has invalid status for update",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+
++ Response 404 (application/json)
+
+        {
+            "error": "NOT_FOUND",
+            "error_description":"Resource was not found",
+            "uuid": "4f6e5019-3c21-4dc5-ab1c-e5df414b1176"
+        }
+
+
