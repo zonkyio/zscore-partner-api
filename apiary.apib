@@ -77,7 +77,7 @@ For OAuth2 authentication we provided `client_id` and `client_secret`.
 Use both to generate username/password basic authentication header.
 Within response you will obtain `access_token` that you will use for secured comunitation with API.
 
-+ Request (x-www-form-urlencoded)
++ Request (application/x-www-form-urlencoded)
 
     + Headers
 
@@ -85,7 +85,7 @@ Within response you will obtain `access_token` that you will use for secured com
 
     + Body
 
-            grant_type: client_credentials
+            grant_type=client_credentials
 
 + Response 200 (application/json)
 
@@ -170,7 +170,7 @@ Create new application. Use response `Location` header for following operations.
         ```js
         {
             "email": "test@zonky.cz",
-            "phone": "420777888999",
+            "phone": "+420777888999",
             "birthYear" : 1989,
             "education" : "HIGH_SCHOOL",
             "housingType" : "RENT",
