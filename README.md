@@ -7,7 +7,7 @@ You can build and export the documentation locally outside Apiary with a few sim
 1. Clone this repository
 ```bash
 git clone git@github.com:zonkyio/zscore-partner-api.git
-cd zscore-api
+cd zscore-partner-api
 ```
 
 2. Install project dependencies

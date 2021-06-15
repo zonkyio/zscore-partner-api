@@ -214,21 +214,22 @@ Create new application. Use response `Location` header for following operations.
 
 ### Get All Applications [GET /partners/me/applications{?page,size,createdFrom,createdTo,status}]
 
-(NOT READY YET)
 Gets all partners created applications data. Its possible to perform pagination and filtering.
 
 + Parameters
 
-    - page (number, optional) - Default is 1
+    - page (number, optional) - Default is 0
     - size (number, optional) - Default is 10
     - createdFrom (string, `2021-03-14`, optional)
     - createdTo (string, `2021-04-14`, optional)
     - status (enum, optional) 
         - `OPEN`
+        - `PROCESSING_REQUESTED`
+        - `PROCESSING`
         - `FAILED`
         - `FINISHED`
         - `EXPIRED`
-      
+
 + Request
 
     + Headers
@@ -247,7 +248,14 @@ Gets all partners created applications data. Its possible to perform pagination 
                 "status": "OPEN"
             }
         ```
-     
+
++ Response 400 (application/json)
+
+        {
+            "error": "VALIDATION_ERROR",
+            "error_description":"The parameter with name 'status' has not valid value 'EXPIRE'",
+            "uuid": "4a934eef-86e7-46e3-a286-61b41b5f17e1"
+        }
 
 ### Get Application [GET /partners/me/applications/{application_uuid}]
 
@@ -269,6 +277,8 @@ Gets the applications data. If scoring is successfully completed we also provide
     
         - status (enum) 
             - `OPEN`
+            - `PROCESSING_REQUESTED`
+            - `PROCESSING`
             - `FAILED`
             - `FINISHED`
             - `EXPIRED`
@@ -330,7 +340,7 @@ Gets the applications data. If scoring is successfully completed we also provide
                 "createdAt": "2021-03-14T12:35:00",
                 "scoringFinishedAt": "2021-03-14T12:48:00",
                 "email": "test@zonky.cz",
-                "phone": "420777888999",
+                "phone": "+420777888999",
                 "birthYear" : 1989,
                 "education" : "HIGH_SCHOOL",
                 "housingType" : "RENT",
@@ -376,7 +386,6 @@ Gets the applications data. If scoring is successfully completed we also provide
     
 ### Update Application [PUT /partners/me/applications/{application_uuid}]
 
-(NOT READY YET)
 Update existing application data.
 
 + Parameters
@@ -428,7 +437,7 @@ Update existing application data.
         ```js
         {
             "email": "test@zonky.cz",
-            "phone": "420777888999",
+            "phone": "+420777888999",
             "birthYear" : 1989,
             "education" : "HIGH_SCHOOL",
             "housingType" : "RENT",
@@ -445,6 +454,8 @@ Update existing application data.
     
         - status (enum) 
             - `OPEN`
+            - `PROCESSING_REQUESTED`
+            - `PROCESSING`
             - `FAILED`
             - `FINISHED`
             - `EXPIRED`

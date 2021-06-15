@@ -27,7 +27,8 @@
 							"    pm.environment.set(\"oauthAccessToken\", jsonData.access_token);",
 							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"id": "b314b383-93c7-4aac-9f9f-254953b10a39"
 					}
 				}
 			],
@@ -129,7 +130,8 @@
 							"    pm.expect(jsonData.monthLimit).to.equals(4000);",
 							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"id": "de944298-754a-4174-a62f-597bd11786e1"
 					}
 				}
 			],
@@ -178,7 +180,8 @@
 							"    pm.environment.set(\"application_uuid\", pm.response.headers.get(\"Location\").split(\"/\")[6]);",
 							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"id": "3d5c5ae2-a35c-4b20-8cb1-994660d47189"
 					}
 				}
 			],
@@ -252,7 +255,8 @@
 							"    pm.expect(jsonData).to.have.property('recommendations');",
 							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"id": "52d1cc40-df50-421c-9d3a-0d6e6a7b7856"
 					}
 				}
 			],
@@ -318,7 +322,8 @@
 							"    pm.expect(jsonData).to.have.property('scoringErrorCode');",
 							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"id": "56cc95e8-9a79-47c0-9171-c46a22d64f70"
 					}
 				}
 			],
@@ -366,7 +371,86 @@
 			"response": []
 		},
 		{
-			"name": "13 - Update Application (Not ready)",
+			"name": "13 - Get Applications",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"const jsonData = pm.response.json();",
+							"",
+							"pm.test(\"Response JSON contains all data\", function () {",
+							"    pm.expect(jsonData).to.have.property('uuid');",
+							"    pm.expect(jsonData.uuid).to.equals(pm.environment.get(\"application_uuid\"));",
+							"    pm.expect(jsonData).to.have.property('createdAt');",
+							"    pm.expect(jsonData).to.have.property('scoringFinishedAt');",
+							"    pm.expect(jsonData).to.have.property('email');",
+							"    pm.expect(jsonData).to.have.property('phone');",
+							"    pm.expect(jsonData).to.have.property('birthYear');",
+							"    pm.expect(jsonData).to.have.property('education');",
+							"    pm.expect(jsonData).to.have.property('housingType');",
+							"    pm.expect(jsonData).to.have.property('gender');",
+							"    pm.expect(jsonData).to.have.property('maritalStatus');",
+							"    pm.expect(jsonData).to.have.property('zipCode');",
+							"    pm.expect(jsonData).to.have.property('primaryIncome');",
+							"    pm.expect(jsonData).to.have.property('status');",
+							"    pm.expect(jsonData).to.have.property('score');",
+							"    pm.expect(jsonData).to.have.property('recommendations');",
+							"});"
+						],
+						"type": "text/javascript",
+						"id": "6313c3f5-fa2d-46e4-87de-9ca0418b156e"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{oauthAccessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9092/partners/me/applications/{{application_uuid}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9092",
+					"path": [
+						"partners",
+						"me",
+						"applications",
+						"{{application_uuid}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "14 - Update Application",
 			"event": [
 				{
 					"listen": "test",
@@ -383,7 +467,8 @@
 							"    pm.expect(jsonData.monthLimit).to.equals(4000);",
 							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"id": "74eae479-4052-4989-94a0-a19185ca99ce"
 					}
 				}
 			],
@@ -441,7 +526,8 @@
 							"    pm.response.to.have.header(\"Location\");",
 							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"id": "6e361ab0-5e7d-434a-b7e3-9c2a0ca185e4"
 					}
 				}
 			],
@@ -498,7 +584,8 @@
 							"});",
 							""
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"id": "18b66b11-f010-4296-8c46-41b1c8301990"
 					}
 				}
 			],
@@ -548,7 +635,8 @@
 							"    pm.response.to.have.status(202);",
 							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"id": "bc2eef09-8864-427e-9182-b151b00fc1e2"
 					}
 				}
 			],
@@ -592,5 +680,6 @@
 			},
 			"response": []
 		}
-	]
+	],
+	"protocolProfileBehavior": {}
 }
